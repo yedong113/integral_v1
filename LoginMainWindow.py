@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QWidget, QDialog, QLabel, QLineEdit, QFormLayout, QDialogButtonBox, QComboBox, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, \
+    QPushButton, QWidget, QDialog, QLabel, QLineEdit, QFormLayout, QDialogButtonBox, QComboBox, QMessageBox,QStyleFactory
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
@@ -51,9 +52,10 @@ class LoginDialog(QDialog):
 def main():
     from simple_point_system import SimplePointSystem
     app = QApplication(sys.argv)
+    # app.setStyle(QStyleFactory.create("windows"))
     login_dialog = LoginDialog()
     if login_dialog.exec() == QDialog.Accepted:
-        simple_point_system = SimplePointSystem()
+        simple_point_system = SimplePointSystem(app)
         simple_point_system.show()
         sys.exit(app.exec_())
 

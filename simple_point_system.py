@@ -1,6 +1,6 @@
 import sys
 import sqlite3
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QLabel, QComboBox, QLineEdit,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QLabel, QComboBox, QLineEdit,QStyleFactory,
                              QPushButton, QWidget, QFormLayout, QDateEdit, QTextEdit, QDialog, QTreeView, QToolBar,
                              QTableView, QAbstractItemView, QMenuBar, QAction, QHeaderView, QHBoxLayout)
 from PyQt5.QtCore import Qt
@@ -21,9 +21,9 @@ c_categories = Categories("categories.db")
 
 
 class SimplePointSystem(QMainWindow):
-    def __init__(self):
+    def __init__(self,app):
         super().__init__()
-
+        self.app = app
         self.menuBar = QMenuBar(self)
         self.initUI()
         self.showMaximized()
@@ -33,6 +33,7 @@ class SimplePointSystem(QMainWindow):
         fileMenu = self.menuBar.addMenu("操作")
         editMenu = self.menuBar.addMenu("设置")
         statMenu = self.menuBar.addMenu("统计分析")
+        displayStyleMenu = self.menuBar.addMenu("显示风格")
         helpMenu = self.menuBar.addMenu("帮助")
         openIconSmall = QIcon('./img/新增_16.png')
         openAction = QAction(openIconSmall, "添加积分", self)
@@ -68,6 +69,23 @@ class SimplePointSystem(QMainWindow):
         statMonthAction = QAction(statMonthIcon, "按月查询", self)
         statMonthAction.triggered.connect(self.stat_month)
         statMenu.addAction(statMonthAction)
+
+        displayStyleAction = QAction("windows", self)
+        displayStyleAction.triggered.connect(self.windows_style)
+        displayStyleMenu.addAction(displayStyleAction)
+
+
+        displayWindowsXPStyleAction = QAction("windowsxp", self)
+        displayWindowsXPStyleAction.triggered.connect(self.windowsxp_style)
+        displayStyleMenu.addAction(displayWindowsXPStyleAction)
+
+        displayFusionAction = QAction("Fusion", self)
+        displayFusionAction.triggered.connect(self.fusion_style)
+        displayStyleMenu.addAction(displayFusionAction)
+
+        displayMacAction = QAction("Mac", self)
+        displayMacAction.triggered.connect(self.mac_style)
+        displayStyleMenu.addAction(displayMacAction)
 
         aboutIcon = QIcon('./img/关于.png')
         aboutAction = QAction(aboutIcon,"关于", self)
@@ -130,6 +148,21 @@ class SimplePointSystem(QMainWindow):
 
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+
+    def windows_style(self):
+        self.app.setStyle(QStyleFactory.create("windows"))
+
+    def windowsxp_style(self):
+        self.app.setStyle(QStyleFactory.create("windowsxp"))
+
+
+    # fusion_style
+    def fusion_style(self):
+        self.app.setStyle(QStyleFactory.create("Fusion"))
+
+    def mac_style(self):
+        self.app.setStyle(QStyleFactory.create("macintosh"))
+
 
     def stat_month(self):
         # 在这里实现显示关于对话框的逻辑
@@ -218,6 +251,27 @@ class SimplePointSystem(QMainWindow):
         # layout.addWidget(category_label)
 
         category_tree = QTreeView()
+        # category_tree.setStyleSheet("""
+        #     QTreeView::branch:has-children:!has-siblings:closed,
+        #     QTreeView::branch:closed:has-children:has-siblings {
+        #             border-image: none;
+        #             image: url(branch-closed.png);
+        #     }
+        #     QTreeView::branch:open:has-children:!has-siblings,
+        #     QTreeView::branch:open:has-children:has-siblings  {
+        #             border-image: none;
+        #             image: url(branch-open.png);
+        #     }
+        #     QTreeView::branch:has-siblings:!adjoins-item {
+        #         border-image: url(vline.png) 0;
+        #     }
+        #     QTreeView::branch:has-siblings:adjoins-item {
+        #         border-image: url(branch-more.png) 0;
+        #     }
+        #     QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+        #         border-image: url(branch-end.png) 0;
+        #     }
+        # """)
         self.loadCategoriesTree(category_tree)
         form_layout.addRow('请选择积分类别：', category_tree)
         # form_layout.addWidget(category_tree)
