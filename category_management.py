@@ -5,6 +5,11 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QTreeWidget
 from PyQt5.QtCore import Qt
 
 
+from Categories import Categories
+
+
+categories = Categories("categories.db")
+
 class CategoryManagement(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -77,8 +82,8 @@ class CategoryManagement(QMainWindow):
         self.addCategoriesToTree(None, None)
 
     def addCategoriesToTree(self, parent_id, parent_item):
-        categories = self.getCategories(parent_id)
-        for category in categories:
+        categories_list = categories.getCategories(parent_id)
+        for category in categories_list:
             item = QTreeWidgetItem()
             item.setText(0, str(category[2]))
             item.setData(0, Qt.UserRole, category[0])
@@ -102,17 +107,12 @@ class CategoryManagement(QMainWindow):
             return
 
         category_id = selected_item.data(0, Qt.UserRole)
-        self.cursor.execute('UPDATE categories SET name = ? WHERE id = ?', (category_name, category_id))
-        self.conn.commit()
+        categories.update(id=category_id,name=category_name)
 
         self.loadCategories()
 
     def getCategories(self, parent_id):
-        if parent_id is None:
-            self.cursor.execute('SELECT * FROM categories WHERE parent_id IS NULL')
-        else:
-            self.cursor.execute('SELECT * FROM categories WHERE parent_id=?', (parent_id,))
-        return self.cursor.fetchall()
+        return categories.getCategories(parent_id)
 
     def addCategory(self):
         parent_item = self.category_tree.currentItem()
@@ -128,9 +128,8 @@ class CategoryManagement(QMainWindow):
             QMessageBox.warning(self, '警告', '分类名称不能为空！')
             return
 
-        self.cursor.execute('INSERT INTO categories (parent_id, name) VALUES (?, ?)',
-                            (parent_id, category_name))
-        self.conn.commit()
+        categories.create(parent_id=parent_id,name=category_name)
+
 
         self.loadCategories()
 

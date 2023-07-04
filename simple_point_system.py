@@ -1,15 +1,23 @@
 import sys
 import sqlite3
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QLabel, QComboBox, QLineEdit,
-                             QPushButton, QWidget, QFormLayout, QDateEdit, QTextEdit, QDialog,
+                             QPushButton, QWidget, QFormLayout, QDateEdit, QTextEdit, QDialog, QTreeView, QToolBar,
                              QTableView, QAbstractItemView, QMenuBar, QAction, QHeaderView, QHBoxLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QDate
+from PyQt5.QtGui import QIcon
 import datetime
 from category_management import CategoryManagement
+from StudentMainWindow import StudentListDialog
 from month_query import PointsDialog
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PointDetail import PointsDetail
+from GlobalData import global_data
+from Categories import Categories
+
+points_detail = PointsDetail("categories.db")
+c_categories = Categories("categories.db")
 
 
 class SimplePointSystem(QMainWindow):
@@ -26,33 +34,57 @@ class SimplePointSystem(QMainWindow):
         editMenu = self.menuBar.addMenu("设置")
         statMenu = self.menuBar.addMenu("统计分析")
         helpMenu = self.menuBar.addMenu("帮助")
-        openAction = QAction("添加积分", self)
+        openIconSmall = QIcon('./img/新增_16.png')
+        openAction = QAction(openIconSmall, "添加积分", self)
         openAction.triggered.connect(self.showSubmitDialog)
+
         fileMenu.addAction(openAction)
-        queryAction = QAction("查询积分", self)
+
+        queryIconSmall = QIcon('./img/查询_16.png')
+        queryAction = QAction(queryIconSmall, "查询积分", self)
         queryAction.triggered.connect(self.query_points)
         fileMenu.addAction(queryAction)
-        refreshAction = QAction("刷新", self)
+
+        refreshIcon = QIcon('./img/刷新.png')
+        refreshAction = QAction(refreshIcon, "刷新", self)
         refreshAction.triggered.connect(self.query_all_points)
-        fileMenu.addAction(queryAction)
+        fileMenu.addAction(refreshAction)
 
         saveAction = QAction("保存", self)
         saveAction.triggered.connect(self.save_file)
         fileMenu.addAction(saveAction)
 
-        typeSetting = QAction("积分类别设置", self)
+        studentSettingIcon = QIcon('./img/学生信息设置.png')
+        studentSetting = QAction(studentSettingIcon, "学生信息设置", self)
+        studentSetting.triggered.connect(self.student_setting)
+        editMenu.addAction(studentSetting)
+
+        typeIcon = QIcon('./img/类别设置.png')
+        typeSetting = QAction(typeIcon, "积分类别设置", self)
         typeSetting.triggered.connect(self.type_setting)
         editMenu.addAction(typeSetting)
 
-
-        statMonthAction = QAction("按月查询", self)
+        statMonthIcon = QIcon('./img/统计.png')
+        statMonthAction = QAction(statMonthIcon, "按月查询", self)
         statMonthAction.triggered.connect(self.stat_month)
         statMenu.addAction(statMonthAction)
 
-
-        aboutAction = QAction("关于", self)
+        aboutIcon = QIcon('./img/关于.png')
+        aboutAction = QAction(aboutIcon,"关于", self)
         aboutAction.triggered.connect(self.show_about_dialog)
         helpMenu.addAction(aboutAction)
+
+        self.toolbar = QToolBar()
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toolbar.addAction(openAction)
+        self.toolbar.addAction(queryAction)
+        self.toolbar.addAction(refreshAction)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(studentSetting)
+        self.toolbar.addAction(typeSetting)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(statMonthAction)
+        self.addToolBar(self.toolbar)
 
         self.initDatabase()
 
@@ -83,6 +115,7 @@ class SimplePointSystem(QMainWindow):
 
         layout = QVBoxLayout(central_widget)
         layout.setMenuBar(self.menuBar)
+        layout.addWidget(self.toolbar)
 
         self.points_table = QTableView()
         self.points_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -97,7 +130,6 @@ class SimplePointSystem(QMainWindow):
 
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
-
 
     def stat_month(self):
         # 在这里实现显示关于对话框的逻辑
@@ -115,47 +147,18 @@ class SimplePointSystem(QMainWindow):
     def initDatabase(self):
         self.conn = sqlite3.connect('categories.db')
         self.cursor = self.conn.cursor()
-
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS points (
-                                   id INTEGER PRIMARY KEY,
-                                   name TEXT NOT NULL,
-                                   date TEXT NOT NULL,
-                                   category_id INTEGER NOT NULL,
-                                   points INTEGER NOT NULL,
-                                   remark TEXT,
-                                   FOREIGN KEY (category_id) REFERENCES categories(id)
-                               )''')
-
-        self.conn.commit()
+        pass
 
     def load_by_date(self):
+        # 按登录用户名和日期获取积分记录
         selected_date = self.date_edit.date().toString("yyyy-MM-dd")
-        self.cursor.execute('''select *from (SELECT points.name, points.date, categories.name,
-                                      points.points, points.remark
-                               FROM points 
-                               INNER JOIN categories ON points.category_id = categories.id
-                               ORDER BY points.date DESC ) where date=? ''', (selected_date,))
-        points = self.cursor.fetchall()
+        points = points_detail.list_by_date_and_user_id(selected_date, global_data.username)
         self.load_points(points)
-
         pass
 
     def load_all_points(self):
-        self.cursor.execute('''SELECT points.name, points.date, categories.name,
-                                      points.points, points.remark
-                               FROM points
-                               INNER JOIN categories ON points.category_id = categories.id
-                               ORDER BY points.date DESC''')
-        points = self.cursor.fetchall()
-
-        model = QStandardItemModel(len(points), 5)
-        model.setHorizontalHeaderLabels(['姓名', '日期', '积分类别', '积分', '备注'])
-
-        for row, point in enumerate(points):
-            for col, value in enumerate(point):
-                model.setItem(row, col, QStandardItem(str(value)))
-
-        self.points_table.setModel(model)
+        points = points_detail.list_by_user_id(global_data.username)
+        self.load_points(points)
 
     def load_points(self, points):
         model = QStandardItemModel(len(points), 5)
@@ -163,26 +166,16 @@ class SimplePointSystem(QMainWindow):
 
         for row, point in enumerate(points):
             for col, value in enumerate(point):
-                model.setItem(row, col, QStandardItem(str(value)))
+                if value is not None:
+                    model.setItem(row, col, QStandardItem(str(value)))
+                else:
+                    model.setItem(row, col, QStandardItem(str('')))
 
         self.points_table.setModel(model)
 
     def loadPoints(self):
-        self.cursor.execute('''SELECT points.name, points.date, categories.name,
-                                      points.points, points.remark
-                               FROM points
-                               INNER JOIN categories ON points.category_id = categories.id
-                               ORDER BY points.date DESC''')
-        points = self.cursor.fetchall()
-
-        model = QStandardItemModel(len(points), 5)
-        model.setHorizontalHeaderLabels(['姓名', '日期', '积分类别', '积分', '备注'])
-
-        for row, point in enumerate(points):
-            for col, value in enumerate(point):
-                model.setItem(row, col, QStandardItem(str(value)))
-
-        self.points_table.setModel(model)
+        points = points_detail.list_by_user_id(global_data.username)
+        self.load_points(points)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -204,15 +197,17 @@ class SimplePointSystem(QMainWindow):
 
     def showSubmitDialog(self):
         submit_dialog = QDialog(self)
+        submit_dialog.resize(800, 600)
         submit_dialog.setWindowTitle('添加积分')
 
         layout = QVBoxLayout(submit_dialog)
 
         form_layout = QFormLayout()
         layout.addLayout(form_layout)
-
-        name_input = QLineEdit("叶瑜")
-        form_layout.addRow('姓名：', name_input)
+        name_combo = QComboBox()
+        form_layout.addRow('姓名：', name_combo)
+        for item in global_data.student_info:
+            name_combo.addItem(item[1], item[0])
 
         date_input = QDateEdit()
         date_input.setCalendarPopup(True)
@@ -220,17 +215,16 @@ class SimplePointSystem(QMainWindow):
         form_layout.addRow('日期：', date_input)
 
         category_label = QLabel('请选择积分类别：')
-        layout.addWidget(category_label)
+        # layout.addWidget(category_label)
 
-        category_combo = QComboBox()
-        self.loadCategories(category_combo)
-        layout.addWidget(category_combo)
-
-        points_label = QLabel('请输入积分：')
-        layout.addWidget(points_label)
+        category_tree = QTreeView()
+        self.loadCategoriesTree(category_tree)
+        form_layout.addRow('请选择积分类别：', category_tree)
+        # form_layout.addWidget(category_tree)
+        # layout.addWidget(category_tree)
 
         points_input = QLineEdit()
-        layout.addWidget(points_input)
+        form_layout.addRow('请输入积分：', points_input)
 
         remark_input = QTextEdit()
         form_layout.addRow('备注：', remark_input)
@@ -239,19 +233,17 @@ class SimplePointSystem(QMainWindow):
         layout.addWidget(submit_button)
 
         def submitPoints():
-            name = name_input.text()
+            select_index = name_combo.currentIndex()
+            stu_id = name_combo.itemData(select_index)
             date = date_input.date().toString(Qt.ISODate)
-            category_id = category_combo.currentData()
+            indexes = category_tree.selectionModel().selectedIndexes()
+            category_id = indexes[0].data()
+            # category_id = category_tree.sel
             points = points_input.text()
             remark = remark_input.toPlainText()
 
-            # 在此处进行数据验证，例如检查 points 是否为数字
-            current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-            self.cursor.execute('''INSERT INTO points (name, date, category_id, points, remark)
-                                   VALUES (?, ?, ?, ?, ?)''', (name, date, category_id, points, remark))
-            self.conn.commit()
-
-            # 在此处显示成功消息或清除输入框等
+            points_detail.create(student_id=stu_id, date=date, category_id=category_id, points=points,
+                                 user_id=global_data.username)
             self.loadPoints()
             submit_dialog.accept()
 
@@ -259,18 +251,21 @@ class SimplePointSystem(QMainWindow):
 
         submit_dialog.exec_()
 
-    def loadCategories(self, combo, parent_id=None, level=0):
-        categories = self.getCategories(parent_id)
-        for category in categories:
-            combo.addItem(' ' * 4 * level + category[2], category[0])
-            self.loadCategories(combo, category[0], level + 1)
+    def loadCategoriesTree(self, category_tree):
+        categories = c_categories.list_all()
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels(['id', 'name'])
+        rootItem = model.invisibleRootItem()
+        parent_dict = {}
 
-    def getCategories(self, parent_id):
-        if parent_id is None:
-            self.cursor.execute('SELECT * FROM categories WHERE parent_id IS NULL')
-        else:
-            self.cursor.execute('SELECT * FROM categories WHERE parent_id=?', (parent_id,))
-        return self.cursor.fetchall()
+        for id, parent_id, name, points in categories:
+            parent = parent_dict.get(parent_id, rootItem)
+            item = QStandardItem(str(id))
+            item3 = QStandardItem(name)
+            parent.appendRow([item, item3])
+            parent_dict[id] = item
+
+        category_tree.setModel(model)
 
     def open_file(self):
         # 在这里实现打开文件的逻辑
@@ -289,9 +284,6 @@ class SimplePointSystem(QMainWindow):
         self.category_management = CategoryManagement()
         self.category_management.show()
 
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    simple_point_system = SimplePointSystem()
-    simple_point_system.show()
-    sys.exit(app.exec_())
+    def student_setting(self):
+        self.student_dialog = StudentListDialog()
+        self.student_dialog.show()
