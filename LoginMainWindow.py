@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, \
-    QPushButton, QWidget, QDialog, QLabel, QLineEdit, QFormLayout, QDialogButtonBox, QComboBox, QMessageBox,QStyleFactory
+    QPushButton, QWidget, QDialog, QLabel, QLineEdit, QFormLayout, QDialogButtonBox, QComboBox, QMessageBox, \
+    QStyleFactory
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
@@ -11,11 +12,11 @@ from GlobalData import global_data
 school_system = SchoolSystem('categories.db')
 
 
-
 class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login")
+        self.resize(300,100)
         self.layout = QFormLayout(self)
 
         self.username = QLineEdit("yedong113")
@@ -45,13 +46,17 @@ class LoginDialog(QDialog):
                 global_data.student_info.append(item)
             self.accept()
 
+
 # StudentDialog, StudentTable, MainWindow 类的定义与之前相同
 
-
-
+import qdarkstyle
 def main():
     from simple_point_system import SimplePointSystem
     app = QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+    from qdarkstyle.light.palette import LightPalette
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
     # app.setStyle(QStyleFactory.create("windows"))
     login_dialog = LoginDialog()
     if login_dialog.exec() == QDialog.Accepted:

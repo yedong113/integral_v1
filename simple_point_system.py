@@ -1,11 +1,12 @@
 import sys
 import sqlite3
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QLabel, QComboBox, QLineEdit,QStyleFactory,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QLabel, QComboBox, QLineEdit, QStyleFactory,
                              QPushButton, QWidget, QFormLayout, QDateEdit, QTextEdit, QDialog, QTreeView, QToolBar,
                              QTableView, QAbstractItemView, QMenuBar, QAction, QHeaderView, QHBoxLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QFile, QTextStream
 import datetime
 from category_management import CategoryManagement
 from StudentMainWindow import StudentListDialog
@@ -15,13 +16,14 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PointDetail import PointsDetail
 from GlobalData import global_data
 from Categories import Categories
+import qdarkstyle
 
 points_detail = PointsDetail("categories.db")
 c_categories = Categories("categories.db")
 
 
 class SimplePointSystem(QMainWindow):
-    def __init__(self,app):
+    def __init__(self, app):
         super().__init__()
         self.app = app
         self.menuBar = QMenuBar(self)
@@ -70,25 +72,30 @@ class SimplePointSystem(QMainWindow):
         statMonthAction.triggered.connect(self.stat_month)
         statMenu.addAction(statMonthAction)
 
-        displayStyleAction = QAction("windows", self)
-        displayStyleAction.triggered.connect(self.windows_style)
-        displayStyleMenu.addAction(displayStyleAction)
+        # displayStyleAction = QAction("windows", self)
+        # displayStyleAction.triggered.connect(self.windows_style)
+        # displayStyleMenu.addAction(displayStyleAction)
+
+        # Ubuntu ElegantDark  MaterialDark  ConsoleStyle AMOLED Aqua MacOS.qss
+        UbuntuStyleAction = QAction("Ubuntu", self)
+        UbuntuStyleAction.triggered.connect(self.Ubuntu_style)
+        displayStyleMenu.addAction(UbuntuStyleAction)
+
+        displayElegantDarkAction = QAction("ElegantDark", self)
+        displayElegantDarkAction.triggered.connect(self.ElegantDark_style)
+        displayStyleMenu.addAction(displayElegantDarkAction)
+
+        displayElegantLightAction = QAction("ElegantLight", self)
+        displayElegantLightAction.triggered.connect(self.ElegantLight_style)
+        displayStyleMenu.addAction(displayElegantLightAction)
 
 
-        displayWindowsXPStyleAction = QAction("windowsxp", self)
-        displayWindowsXPStyleAction.triggered.connect(self.windowsxp_style)
-        displayStyleMenu.addAction(displayWindowsXPStyleAction)
-
-        displayFusionAction = QAction("Fusion", self)
-        displayFusionAction.triggered.connect(self.fusion_style)
-        displayStyleMenu.addAction(displayFusionAction)
-
-        displayMacAction = QAction("Mac", self)
+        displayMacAction = QAction("MacOS", self)
         displayMacAction.triggered.connect(self.mac_style)
         displayStyleMenu.addAction(displayMacAction)
 
         aboutIcon = QIcon('./img/关于.png')
-        aboutAction = QAction(aboutIcon,"关于", self)
+        aboutAction = QAction(aboutIcon, "关于", self)
         aboutAction.triggered.connect(self.show_about_dialog)
         helpMenu.addAction(aboutAction)
 
@@ -149,20 +156,36 @@ class SimplePointSystem(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-    def windows_style(self):
-        self.app.setStyle(QStyleFactory.create("windows"))
+    def load_style(self,file_name):
+        file = QFile(file_name)
+        if file.open(QFile.ReadOnly | QFile.Text):
+            # 使用QTextStream读取QSS文件内容
+            stream = QTextStream(file)
+            style_sheet = stream.readAll()
 
-    def windowsxp_style(self):
-        self.app.setStyle(QStyleFactory.create("windowsxp"))
+            # 设置应用程序的样式表
+            self.app.setStyleSheet(style_sheet)
 
+    def Ubuntu_style(self):
+        self.load_style("./QSS-master/Ubuntu.qss")
 
-    # fusion_style
+    def ElegantDark_style(self):
+        # self.load_style("./QSS-master/ElegantDark.qss")
+        self.app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+        self.app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
+    def ElegantLight_style(self):
+        # self.load_style("./QSS-master/ElegantDark.qss")
+        self.app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+        from qdarkstyle.light.palette import LightPalette
+        self.app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5',palette=LightPalette))
+
+    # fusion_style ElegantLight_style
     def fusion_style(self):
         self.app.setStyle(QStyleFactory.create("Fusion"))
 
     def mac_style(self):
-        self.app.setStyle(QStyleFactory.create("macintosh"))
-
+        self.load_style("./QSS-master/MacOS.qss")
 
     def stat_month(self):
         # 在这里实现显示关于对话框的逻辑

@@ -40,9 +40,9 @@ class CategoryManagement(QMainWindow):
         add_category_layout.addLayout(form_layout)
 
         self.parent_id_label = QLabel()
-        form_layout.addRow('上级分类ID', self.parent_id_label)
+        # form_layout.addRow('上级分类ID', self.parent_id_label)
         self.parent_id_edit_label = QLabel()
-        form_layout.addRow('', self.parent_id_edit_label)
+        form_layout.addRow('上级分类ID', self.parent_id_edit_label)
 
         self.category_name_input = QLineEdit()
         form_layout.addRow('分类名称', self.category_name_input)
