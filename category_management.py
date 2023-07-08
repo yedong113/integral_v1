@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QTreeWidget
 from PyQt5.QtCore import Qt
 
 
-from Categories import Categories
+from categories import Categories
 
 
 categories = Categories("categories.db")

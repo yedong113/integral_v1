@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QWidget, QDialog, QLabel, QLineEdit, QFormLayout, QDialogButtonBox
 from PyQt5.QtCore import Qt
-from SchoolSystem import SchoolSystem
+from school_system import SchoolSystem
 
 # 假设你已经创建了SchoolSystem的实例school_system
 school_system = SchoolSystem('categories.db')

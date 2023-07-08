@@ -9,13 +9,13 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QFile, QTextStream
 import datetime
 from category_management import CategoryManagement
-from StudentMainWindow import StudentListDialog
+from student_main_window import StudentListDialog
 from month_query import PointsDialog
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PointDetail import PointsDetail
-from GlobalData import global_data
-from Categories import Categories
+from point_detail import PointsDetail
+from global_data import global_data
+from categories import Categories
 import qdarkstyle
 
 points_detail = PointsDetail("categories.db")
